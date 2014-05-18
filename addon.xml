@@ -14,7 +14,7 @@
 
     <extension point="xbmc.addon.metadata">
         <summary lang="en">Advanced Setting Setter</summary>
-        <description lang="en">TBA</description>
+        <description lang="en">This addon allows you to activate and modify a large number of advanced settings in XBMC without having to manually create and populate an advancedsettings.xml file. WARNING: these settings are for advanced user only.</description>
         <language>en</language>
         <platform>all</platform>
         <license>GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007</license>
