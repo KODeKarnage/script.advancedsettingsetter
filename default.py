@@ -49,7 +49,14 @@ def log(message, label = ''):
 
 
 
+'''
+TODO
 
+nested sub menus not in current coverage
+
+whole groups that arent in current coverage
+
+'''
 
 		
 
@@ -73,11 +80,8 @@ class main:
 		self.prettify_as_file()
 
 		__addon__.openSettings()
-
 		self.read_files_to_memory()
-
 		self.read_advanced_settings_file()
-		
 		self.create_new_as()
 		self.prettify_as_file()
 
@@ -167,7 +171,6 @@ class main:
 									f.write(x)
 								del self.user_all_settings_dict['|'.join(self.reactive_tag)]
 
-
 					else:
 						findid = re.findall('<!--(.*?)>',line)
 						if findid and findid[0] in self.active_settings:
@@ -224,7 +227,6 @@ class main:
 						# add to the active tags and create empty list for the key
 						self.active_tag.append(tag)
 						self.user_all_settings_dict['|'.join(self.active_tag)] = []
-
 
 
 					elif ''.join(['</',tag,'>']) in line:
