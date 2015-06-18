@@ -296,7 +296,8 @@ class main:
 		there can be no situation where it is in the addondata but not in settings.xml
 		if not in either then save to the side for addition to file later
 			- need to save parents of these lines, so the reader will need to keep track of items opening and Closing
-			- then when it is being saved back, the writer will have to check whether the parent structure is being replicated and bring in those extra lines
+			- then when it is being saved back, the writer will have to check whether the parent structure is being replicated 
+				and bring in those extra lines
 
 	- Open Settings
 
@@ -308,7 +309,186 @@ class main:
 
 
 
+**** NEW ****
+On Open of addon:
+	construct advs from settings.xml 
+		read settings.xml, remove non-commented out lines
+		remove commentings, set all the values as None
+		save as an xml, convert that xml to a dict called advs
+
+	read advancedsettings.xml into a dict
+
+	update advs with the file settings dict 
+
+	cycle through advanced settings (through to non-dict values)
+		if value is None, then set related bool setting to false
+		else set it to be the value
+
+	open addon settings, wait for them to be closed
+
+On Close of addon settings 
+	read advancedsettings.xml into dict called prs
+
+	cycle through all items in advs,
+		check keys for addon setting bool is True,
+			if true update advs with the relevant setting value
+			
+	update prs with items from advs
+	cycle through prs and eliminate items that have values of None 
+	unparse prs back into advancedsettings file
+
+
 '''
+
+
+
+
+def update_dicts(dest_dict, source_dict):
+	''' Takes two dictionaries and updates the first with values from the second but retains the data in the destination,
+		if it is not in the source. Dicts that are values themselves are given a similar treatment, rather than being overwritten'''
+
+	for k, v in dest_dict.iteritems():
+		if k in source_dict:
+			if isinstance(v, dict):
+				dest_dict[k] = update_dicts(v, source_dict[k])
+			else:
+				dest_dict[k] = source_dict[k]
+
+	return dest_dict
+
+
+
+
+
 if __name__ == "__main__":
 	main()
 
+
+advs = { 
+			'advancedsettings': { 
+				'edl': { 
+						'commbreakautowait': None,
+						'commbreakautowind': None,
+						'maxcommbreakgap': None,
+						'maxcommbreaklength': None,
+						'mergeshortcommbreaks': None,
+						'mincommbreaklength': None,
+						},
+				'epg': {
+						'activetagcheckinterval': None,
+						'displayincrementalupdatepopup': None,
+						'displayupdatepopup': None,
+						'lingercleanupintervaltime': None,
+						'lingertime': None,
+						'retryinterruptedupdateinterval': None,
+						'updatecheckinterval': None,
+						'updateemptytagsinterval': None,
+						},
+				'karaoke': { 
+						'alwaysreplacegenre': None,
+						'autoassignstartfrom': None,
+						'nextsongpopuptime': None,
+						'nocdgbackground': None,
+						'storedelay': None,
+						'syncdelaycdg': None,
+						'syncdelaylrc': None,
+						},
+				'masterlock': { 
+						'automastermode': None,
+						'loginlock': None,
+						'maxretries': None,
+						'startuplock': None,
+						},
+				'mymovies': { 
+						'categoriestogenres': None,
+						},
+				'network': { 
+						'buffermode': None,
+						'cachemembuffersize': None,
+						'curlclienttimeout': None,
+						'curllowspeedtime': None,
+						'httpproxypassword': None,
+						'httpproxyusername': None,
+						'readbufferfactor': None,
+						},
+				'pvr': { 
+						'autoscaniconsuserset': None,
+						'cacheindvdplayer': None,
+						'channeliconsautoscan': None,
+						'infotoggleinterval': None,
+						'maxvideocachelevel': None,
+						'minvideocachelevel': None,
+						'numericchannelswitchtimeout': None,
+						'timecorrection': None,
+						},
+				'slideshow': { 
+						'blackbarcompensation': None,
+						'panamount': None,
+						'zoomamount': None,
+						},
+				'tuxbox': { 
+						'audiochannelselection': None,
+						'defaultrootmenu': None,
+						'defaultsubmenu': None,
+						'epgrequesttime': None,
+						'pictureicon': None,
+						'submenuselection': None,
+						'zapwaittime': None,
+						},
+				'video': { 
+						'audiodelayrange': None,
+						'blackbarcolour': None,
+						'defaultplayer': None,
+						'fullscreenonmoviestart': None,
+						'ignorepercentatend': None,
+						'ignoresecondsatstart': None,
+						'percentseekbackward': None,
+						'percentseekbackwardbig': None,
+						'percentseekforward': None,
+						'percentseekforwardbig': None,
+						'playcountminimumpercent': None,
+						'smallstepbackseconds': None,
+						'subsdelayrange': None,
+						'timeseekbackward': None,
+						'timeseekbackwardbig': None,
+						'timeseekforward': None,
+						'timeseekforwardbig': None,
+						'usetimeseeking': None,
+						},
+				'videolibrary': {
+						'allitemsonbottom': None,
+						'backgroundupdate': None,
+						'cleanonupdate': None,
+						'dateadded': None,
+						'exportautothumbs': None,
+						'hideallitems': None,
+						'hideemptyseries': None,
+						'hiderecentlyaddeditems': None,
+						'importresumepoint': None,
+						'importwatchedstate': None,
+						'itemseparator': None,
+						'recentlyaddeditems': None,
+						},
+				'videoscanner': {
+						'alwaysontop': None,
+						'controllerdeadzone': None,
+						'enablemultimediakeys': None,
+						'fanartres': None,
+						'fullscreen': None,
+						'ignoreerrors': None,
+						'imageres': None,
+						'packagefoldersize': None,
+						'playlistretries': None,
+						'playlisttimeout': None,
+						'remotedelay': None,
+						'remoterepeat': None,
+						'showexitbutton': None,
+						'splash': None,
+						'useddsfanart': None,
+						},
+				'window': { 
+						'height': None,
+						'width': None,
+						}
+					}
+				}
