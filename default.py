@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-#  Copyright (C) 2014 KodeKarnage
+#  Copyright (C) 2015 KodeKarnage
 #
 #  This Program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -20,351 +20,367 @@
 #
 
 
-import xbmcgui
+'''
+******************************* How To Add New Advanced Settings *******************************
+
+Settings with unique labels can be added easily.
+
+The commented-out sections of the settings.xml are used to create an advancedsettings.xml template, that contains all the settings
+that can be set using the addon.
+
+To add a new setting to an existing sub-group (such as network or video) simply replace "newsettingname" in this pattern and
+insert it into the settings.xml in the approriate group:
+
+	<!--newsettingname></newsettingname-->
+	<setting default="false" id="newsettingnamebool" label="Activate newsettingname" type="bool"/>
+	<setting default="0" enable="eq(-1,true)" id="newsettingname" label="newsettingname" subsetting="true" type="number"/>
+
+The first boolean line determines whether the setting below it is shown AND whether it gets added to the new advancedsettings.xml.
+The second setting line can be constructed any way you like. http://kodi.wiki/view/Add-on_settings
+
+If you need to add a setting in a new sub group, then simply insert the heading and closing tags:
+
+	<!--newgroup_HEADING-->
+		<!--newsettingname></newsettingname-->
+		<setting default="false" id="newsettingnamebool" label="Activate newsettingname" type="bool"/>
+		<setting default="0" enable="eq(-1,true)" id="newsettingname" label="newsettingname" subsetting="true" type="number"/>
+	<!--/newgroup_HEADING-->
+
+If you need to create a sub-sub-group, then simply nest the new group within two headings:
+
+	<!--newgroup1_HEADING-->
+		<!--newgroup2_HEADING-->
+			<!--newsettingname></newsettingname-->
+			<setting default="false" id="newsettingnamebool" label="Activate newsettingname" type="bool"/>
+			<setting default="0" enable="eq(-1,true)" id="newsettingname" label="newsettingname" subsetting="true" type="number"/>
+		<!--/newgroup2_HEADING-->
+	<!--/newgroup1_HEADING-->
+
+******************************* Addon Logic *******************************
+
+On Open of addon:
+	read the current advancedsettings.xml into a dict called CAS
+
+	extract the mysql info from the CAS and import directly to addon settings
+
+	construct ADVS from resources/settings.xml 
+		read settings.xml, remove non-commented out lines
+		remove commentings, set all the values as None
+		save as an xml, convert that xml to a dict called ADVS
+
+	update ADVS with the values from CAS, ignoring the items that are in the CAS but not in ADVS (like the mysql stuff)
+
+	cycle through ADVS (through to non-dict values)
+		if value is None, then set related bool setting to false [setSetting(key+'bool',true)]
+		else set the bool to True and enter the value [setSetting(key, value)]
+
+	open addon settings, wait for them to be closed (just enter a loop that checks the xml window that is open, 50ms, 
+		continue when it isnt addonsettings.xml or whatever)
+
+On Close of addon settings 
+
+	cycle through all items in ADVS,
+		check keys for addon setting bool is True - [getSetting(key+'bool')]
+			if true, update CAS with the relevant setting value
+			if false, remove the item from CAS
+		add in the MySQL info into ADVS from the addon settings (if deactivated then add blank dict with Nones for values)
+
+	copy values from CAS that arent found in ADVS into ADVS
+			
+	unparse ADVS into a new the advancedsettings.xml file
+
+	insert the header line inthe the advancedsettings.xml file
+'''
+
+
+# Standard Modules
+import os
+import xmltodict
+
+# KODI modules
 import xbmc
 import xbmcaddon
-import sys
-import os
-import shutil
-import re
-import xml.dom.minidom as xdm
-import lxml.etree as etree
-
 
 __addon__        = xbmcaddon.Addon()
 __addonid__      = __addon__.getAddonInfo('id')
 __setting__      = __addon__.getSetting
 lang             = __addon__.getLocalizedString
-dialog           = xbmcgui.Dialog()
 
 scriptPath       = __addon__.getAddonInfo('path')
 user_data = xbmc.translatePath( "special://userdata")
-
-
 
 def log(message, label = ''):
 	logmsg       = '%s : %s - %s ' % (__addonid__, label, message)
 	xbmc.log(msg = logmsg)
 
 
-
-
-'''
-TODO
-
-nested sub menus not in current coverage
-
-whole groups that arent in current coverage
-
-'''
-
-		
-
-
-
-class main:
+class Main(object):
 
 	def __init__(self):
-		self.stored_settings_file = os.path.join(user_data,'addon_data',__addonid__,'settings.xml')
-		self.as_file = os.path.join(user_data,'advancedsettings.xml')
-		self.template_file= os.path.join(scriptPath,'resources','settings.xml')
 
-		self.template_file_pattern_id = ' id=[\'"](.*?)[\'"]'
-		self.template_file_pattern_value = ' value=[\'"](.*?)[\'"]'
-		self.as_file_pattern_id = '<!--(.*?)>'
-		self.as_file_pattern_sub = '>(.*)<'
-		self.as_file_pattern_tag = '<(.*?)>'
+		# file locations
+		self.existing_AS_file 			= os.path.join(user_data,'advancedsettings.xml')
+		self.template_source_file		= os.path.join(scriptPath,'resources','settings.xml')
 
-		self.check_files()
+		# current advanced settings dict
+		self.CAS = self.read_existing_AS_file()
 
-		self.prettify_as_file()
+		# load the MySQL information directly from the CAS into the local addon settings
+		# we will leave this out of the ADVS for the moment
+		# mysql uses the same keyword for the video and music database sections
+		self.CAS = self.MySQL_special_handling_from_CAS(self.CAS)
+
+		# dict of all possible settings the addon can control, values are all set to None
+		self.ADVS = self.create_ADVS_dict()
+
+		# copy the settings in the CAS over to the ADVS, ignoring any settings not found in ADVS
+		self.ADVS = self.update_dicts(self.ADVS, self.CAS)
+
+		# write the ADVS settings to local addon settings file
+		self.update_addon_settings(self.ADVS)
 
 		__addon__.openSettings()
-		self.read_files_to_memory()
-		self.read_advanced_settings_file()
-		self.create_new_as()
-		self.prettify_as_file()
 
+		# wait for the settings window to be closed
+		self.settings_open_loop()
 
-	def prettify_as_file(self):
-		proc = True
+		# clean the ADVS of deactivated settings (change the values to None), load the new settings into it
+		self.ADVS = self.check_bools(self.ADVS)
 
-		with open(self.as_file,'r') as f:
+		# extract the mysql information from the local addon and insert it into the ADVS
+		self.ADVS = self.MySQL_special_handling_to_ADVS(self.ADVS)
+
+		# fill out the ADVS with the items in the CAS that aren't found in ADVS
+		self.ADVS = self.fill_out(self.ADVS, self.CAS)
+
+		# remove the items from ADVS where the value is None
+		self.ADVS = self.remove_Nones(self.ADVS)
+
+		# ADVS now represents the values the user set in the Settings screen and the items in the original advancedsettings.xml
+		# that are NOT found in the addons settings
+
+		# write the ADVS into the existing advancedsettings.xml
+		xmltodict.unparse(input_dict=self.ADVS, output=self.existing_AS_file, pretty=True)
+
+		# edit the advancedsettings.xml to have this as the first line
+		first_line = ['<?xml version="1.0" encoding="utf-8" standalone="yes"?>']
+
+		with open(self.existing_AS_file, 'r') as f:
 			lines = f.readlines()
-			if not lines:
-				proc = False
-				log('ADVANCED SETTINGS FILES IS EMPTY')
 
-		if proc:
-
-			xml = xdm.parse(self.as_file) # or xml.dom.minidom.parseString(xml_string)
-			pretty_xml_as_string = [x.strip() for x in xml.toprettyxml().splitlines()]
-
-			with open(self.as_file,'w+') as f:
-				log('PRETTIFY WRITING LINES')
-				for line in pretty_xml_as_string:
-					if line:
-						if '<?xml' in line:
-							continue
-						else:
-							f.write(line + '\n')
+		with open(self.existing_AS_file, 'w') as f:
+			f.writelines(first_line + lines)
 
 
-	def check_files(self):
+	def settings_open_loop(self):
+		''' The settings window has been opened, and we will loop here until it is closed again. '''
 
-		log(self.stored_settings_file, 'stored_settings_file location')
-		log(os.path.isfile(self.stored_settings_file), 'file exists?')
-		log(self.as_file, 'advanced settings file location')
-		log(os.path.isfile(self.as_file), 'file exists?')
-		log(self.template_file, 'template file location')
-		log(os.path.isfile(self.template_file), 'file exists?')
+		# give the window 5 seconds to open
+		xbmc.sleep(5000)
 
-		if not os.path.isfile(self.as_file):
-			try:
-				with open(self.as_file, 'w+') as f:
-					log('ADVANCED SETTINGS FILE CREATED')
-					pass
-			except IOError:
-				log('cannot create advanced settings file')
-				sys.exit()
-			except:
-				log(sys.exc_info()[0], 'Unexpected error, advanced settings file check')
+		while xbmc.getInfoLabel('Window.Property(xmlfile)') == 'DialogAddonSettings.xml':
+
+			xbmc.sleep(50)
 
 
-	def create_new_as(self):
+	def remove_Nones(self, dictionary):
+		''' Removes item pairs from the dictionary where the value is None. '''
 
-		self.reactive_tag = []
+		for k, v in dictionary.iteritems():
+			if isinstance(v, dict):
+				dictionary[k] = self.remove_Nones(dictionary)
+			else:
+				if v is None:
+					del dictionary[k]
 
-		with open(self.as_file, 'w+') as f:
-			for line in self.new_lines:
-				if "<!--" in line:
-					if "_HEADING" in line:
-						clean_heading = line.replace("_HEADING",'').replace('!--','').replace('-->','>')
-						f.write(clean_heading)
-						log(line,'HEADING WRITTEN')
-						log(self.reactive_tag,'REACTIVE TAG')
-
-						# get tag in the line
-
-						finds = re.findall(self.as_file_pattern_tag,clean_heading)
-						log(finds,'FINDS')
-						if finds:
-							tag = finds[0]
-							log(tag,"TAG")
-
-							if tag[0] == '/':
-								tag = tag[1:]
-
-							# update reactive tag list
-							if ''.join(['<',tag,'>']) in clean_heading:
-
-								self.reactive_tag.append(tag)
-
-							elif ''.join(['</',tag,'>']) in clean_heading:
-
-								self.reactive_tag.remove(tag)
-
-							# check for items in user dict
-							if '|'.join(self.reactive_tag) in self.user_all_settings_dict.keys():
-								log('|'.join(self.reactive_tag),'USER SETTING WRITTEN TO')
-								for x in self.user_all_settings_dict['|'.join(self.reactive_tag)]:
-									f.write(x)
-								del self.user_all_settings_dict['|'.join(self.reactive_tag)]
-
-					else:
-						findid = re.findall('<!--(.*?)>',line)
-						if findid and findid[0] in self.active_settings:
-							active_setting_line = re.sub(self.as_file_pattern_sub, '>' + self.all_settings_dict[findid[0]] + '<', line)
-							log(active_setting_line, 'SETTING WRITTEN')
-
-							f.write(active_setting_line.replace('!--','').replace('-->','>') )
+		return dictionary
 
 
+	def check_bools(self, dictionary):
+		''' Check the local addons settings for whether the individual setting is active. If not, replace the value with None.
+			if it is active, then extract the new value from the local settings.
+		'''
 
-	def read_advanced_settings_file(self):
-		# reads the advanced settings file and extracts any user 
+		for k, v in dictionary.iteritems():
+			if isinstance(v, dict):
+				dictionary[k] = self.check_bools(dictionary)
+			else:
+				if __setting__.(k + 'bool') == 'false':
+					dictionary[k] = None
+				else:
+					dictionary[k] = __setting__(k)
 
-		self.structure_tracker = {}
-		self.active_tag = []
-		self.user_all_settings_dict = {}
-
-		with open(self.as_file,'r+') as f:
-			read_lines = f.readlines()
-
-			for line in read_lines:
-				log(self.active_tag,'ACTIVE TAG')
-				log(line,"LINE")
-				finds = re.findall(self.as_file_pattern_tag,line)
-				if finds:
-					tag = finds[0]
-					log(tag,"TAG")
-
-					if tag[0] == '/':
-						tag = tag[1:]
-
-					if '<' + tag + '>' in line and '</' + tag + '>' in line:
-						# close tag is present, this is a setting
-						log("SETTING")
-
-						if tag not in self.all_settings_dict.keys():
-							# if the tag is not one covered by the existing settings
-							log('TAG NOT IN ALL_SETTINGS DICT')
-
-							self.user_all_settings_dict['|'.join(self.active_tag)].append(line)
-
-						else:
-							# if the tag is one that is covered by the existing settings, use that value
-							log('TAG IN ALL_SETTING DICT')
-
-							value = re.findall(self.as_file_pattern_sub, line)
-							if value:
-								__addon__.setSetting(tag,value[0])
+		return dictionary
 
 
-					elif ''.join(['<',tag,'>']) in line:
-						log('OPEN')
-						# there is an open tag without a close tag, this must be an open tag
-						# add to the active tags and create empty list for the key
-						self.active_tag.append(tag)
-						self.user_all_settings_dict['|'.join(self.active_tag)] = []
+	def update_addon_settings(self, dictonary):
+		''' Extracts the settings from the dicitonary provided and loads them into the local addon settings.'''
+
+		for k, v in dictonary.iteritems:
+			if isinstance(v, dict):
+				self.update_addon_settings(v)
+			else:
+				if v is None:
+					__addon__.setSetting(k+'bool', 'false')
+				else:
+					__addon__.setSetting(k+'bool', 'true')
+					__addon__.setSetting(k, v)
 
 
-					elif ''.join(['</',tag,'>']) in line:
-						log('CLOSE TAG')
-						# there is a close tag without and open tage, this must be a close tag
-						self.active_tag.remove(tag)
+	def read_existing_AS_file(self):
+		''' Reads the existing advancedsettings.xml and returns a dict with the values.'''
 
-					else:
-						log(''.join(['</',tag,'>']))
+		loc = self.existing_AS_file
 
+		with open(loc, 'r') as f:
+			doc = ''.join(f.readlines())
 
-		empty_keys = [k for k,v in self.user_all_settings_dict.iteritems() if not v]
-		for k in empty_keys:
-			del self.user_all_settings_dict[k]
-		log(self.user_all_settings_dict ,'USER SETTINGS')
+		return xmltodict.parse(doc)
 
 
+	def create_ADVS_dict(self):
+		''' Creates a template xml that contains all the settings that are possible to set. '''
 
+		new_lines = []
 
-	def read_files_to_memory(self):
-
-		self.all_settings_dict = {}
-		self.new_lines = []
-		self.headings = []
-
-		with open(self.template_file,'r') as f:
+		with open(self.template_source_file, 'r') as f:
 			lines = f.readlines()
 
 			for line in lines:
 
 				if '<!--' in line:
-					self.new_lines.append(line)
+					new_lines.append(line.replace("_HEADING",'').replace('<!--','').replace('-->','').strip())
 
-				if "_HEADING" in line:
-					self.headings.append(line.replace("_HEADING",'').replace('<!--','').replace('-->','').strip())
+		doc = ''.join(new_lines)	
 
-
-		with open(self.stored_settings_file,'r') as f:
-
-			lines = f.readlines()
-
-			for line in lines:
-
-				if re.findall(self.template_file_pattern_id, line):
-					self.all_settings_dict[re.findall(self.template_file_pattern_id, line)[0]] = re.findall(self.template_file_pattern_value, line)[0]
-
-		
-		self.active_settings = [x.replace('bool','') for x in self.all_settings_dict.keys() if x.endswith('bool') and self.all_settings_dict[x] == 'true']
-		
-		#log(self.all_settings_dict,'SETTINGS DICT')
-		
-		#log(self.active_settings, 'ACTIVE LIST')
-
-		log(self.headings, 'HEADINGS')
-
-		#log(self.new_lines,'NEW LINES')
+		return self.set_all_values_to_None(xmltodict.parse(doc))
 
 
+	def set_all_values_to_None(self, dictionary):
+		''' Takes a dictionary and sets all the values to None. Looks through nested dictionaries and only changes end values.'''
 
-'''
-
-
-# Opening
-	- read as.xml, 
-		check if each item is in settings.xml or in the addondata file (<!-- + item), 
-		if in settings.xml but not addondata file then alter addondata (via setSettings) to reflect value in as.xml
-		there can be no situation where it is in the addondata but not in settings.xml
-		if not in either then save to the side for addition to file later
-			- need to save parents of these lines, so the reader will need to keep track of items opening and Closing
-			- then when it is being saved back, the writer will have to check whether the parent structure is being replicated 
-				and bring in those extra lines
-
-	- Open Settings
-
-
-
-# Closing
-	- create new as.xml
-	- bring in lines saved from previous opening
-
-
-
-**** NEW ****
-On Open of addon:
-	construct advs from settings.xml 
-		read settings.xml, remove non-commented out lines
-		remove commentings, set all the values as None
-		save as an xml, convert that xml to a dict called advs
-
-	read advancedsettings.xml into a dict
-
-	update advs with the file settings dict 
-
-	cycle through advanced settings (through to non-dict values)
-		if value is None, then set related bool setting to false
-		else set it to be the value
-
-	open addon settings, wait for them to be closed
-
-On Close of addon settings 
-	read advancedsettings.xml into dict called prs
-
-	cycle through all items in advs,
-		check keys for addon setting bool is True,
-			if true update advs with the relevant setting value
-			
-	update prs with items from advs
-	cycle through prs and eliminate items that have values of None 
-	unparse prs back into advancedsettings file
-
-
-'''
-
-
-
-
-def update_dicts(dest_dict, source_dict):
-	''' Takes two dictionaries and updates the first with values from the second but retains the data in the destination,
-		if it is not in the source. Dicts that are values themselves are given a similar treatment, rather than being overwritten'''
-
-	for k, v in dest_dict.iteritems():
-		if k in source_dict:
+		for k, v in dictionary.iteritems():
 			if isinstance(v, dict):
-				dest_dict[k] = update_dicts(v, source_dict[k])
+				dictionary[k] = self.set_all_values_to_None(dictionary)
+			else:
+				dictionary[k] = None
+
+		return dictionary
+
+
+	def update_dicts(self, dest_dict, source_dict):
+		''' Takes two dictionaries and updates the first with values from the second but retains the data in the destination,
+			if it is not in the source. Dicts that are values themselves are given a similar treatment, rather than being overwritten'''
+
+		for k, v in dest_dict.iteritems():
+
+				if k in source_dict:
+					if isinstance(v, dict):
+						dest_dict[k] = self.update_dicts(v, source_dict[k])
+					else:
+						dest_dict[k] = source_dict[k]
+
+		return dest_dict
+
+
+	def fill_out(self, dest_dict, source_dict):
+		''' Fills out the dest dictionary with the items in the source dict that aren't in the dest. Items in the dest_dict that
+			aren't found in the source_dict are left in place unchanged.
+		'''
+
+		for k, v in source_dict.iteritems():
+			if k in dest_dict:
+				if isinstance(v, dict):
+					dest_dict[k] = self.fill_out(dest_dict[k], source_dict[k])
+				else:
+					pass
 			else:
 				dest_dict[k] = source_dict[k]
 
-	return dest_dict
+		return dest_dict
 
 
+	def MySQL_special_handling_from_CAS(self, dictionary):
+		''' Reads the MySQL information from the CAS and loads it into the local addon '''
+
+		video = dictionary.get('advancedsettings', {}).get('videodatabase', {})
+		music = dictionary.get('advancedsettings', {}).get('musicdatabase', {})
+
+		sql_subitems = ['name', 'type', 'host', 'port', 'user', 'pass']
+
+		if video:
+			__addon__.setSetting('vd_toggle', 'true')
+
+			for sql_item in sql_subitems:
+				if sql_item in video:
+					__addon__.setSetting('vd_' + sql_item, video[sql_item])
+				else:
+					log('MySQL videodatabase item %s not found', sql_item)
+
+		if music:
+			__addon__.setSetting('mu_toggle', 'true')
+
+			for sql_item in sql_subitems:
+				if sql_item in music:
+					__addon__.setSetting('mu_' + sql_item, music[sql_item])
+				else:
+					log('MySQL musicdatabase item %s not found', sql_item)
+
+		return dictionary
+
+
+	def MySQL_special_handling_to_ADVS(self, dictionary):
+		''' Reads the MySQL settings from the local addon, and writes them directly into the ADVS. 
+			This must be done AFTER the check for deactivated settings and BEFORE the unmatched items from CAS are brought into
+			the ADVS.
+		'''
+
+		sql_subitems = ['name', 'type', 'host', 'port', 'user', 'pass']
+
+		video = {}
+		music = {}
+
+		for sql_item in sql_subitems:
+			video[sql_item] = __setting__('vd_' + sql_item) if __setting__('vd_toggle') == 'true' else None
+			music[sql_item] = __setting__('mu_' + sql_item) if __setting__('mu_toggle') == 'true' else None
+
+		dictionary['videodatabase'] = video
+		dictionary['musicdatabase'] = music
+
+		return dictionary
 
 
 
 if __name__ == "__main__":
-	main()
+	Main()
 
 
-advs = { 
+''' Example of MySQL entries in the advancedsettings.xml '''
+'''
+<advancedsettings>
+	<videodatabase>
+		<type>mysql</type>
+		<host>***.***.***.***</host>
+		<port>3306</port>
+		<user>kodi</user>
+		<pass>kodi</pass>
+	</videodatabase> 
+	<musicdatabase>
+		<type>mysql</type>
+		<host>***.***.***.***</host>
+		<port>3306</port>
+		<user>kodi</user>
+		<pass>kodi</pass>
+	</musicdatabase>
+	<videolibrary>
+		<importwatchedstate>true</importwatchedstate>
+		<importresumepoint>true</importresumepoint>
+	</videolibrary>
+</advancedsettings>
+'''
+
+''' Example of an ADVS '''
+Example = { 
 			'advancedsettings': { 
 				'edl': { 
 						'commbreakautowait': None,
