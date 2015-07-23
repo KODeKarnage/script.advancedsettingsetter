@@ -3,22 +3,22 @@
     <!--advancedsettings_HEADING-->
     <category label="MySQL Setup">
         <setting default="false" id="vd_toggle" label="Include Videos" type="bool"/>
-            <setting subsetting="true" default="MyVideos" id="vd_name" label="Name (optional)" type="text" visible="eq(-1,true)"/>
-            <setting subsetting="true" default="mysql" id="vd_type" label="Type" type="text" visible="eq(-2,true)"/>
-            <setting subsetting="true" id="vd_host" label="Host IP" type="ipaddress" visible="eq(-3,true)"/>
-            <setting subsetting="true" id="vd_port" label="Port" type="number" visible="eq(-4,true)"/>
-            <setting subsetting="true" default="osmc" id="vd_user" label="Username" type="text" visible="eq(-5,true)"/>
-            <setting subsetting="true" default="osmc" id="vd_pass" label="Password" type="text" visible="eq(-6,true)"/>
+        <setting default="MyVideos" id="vd_name" label="Name (optional)" subsetting="true" type="text" visible="eq(-1,true)"/>
+        <setting default="mysql" id="vd_type" label="Type" subsetting="true" type="text" visible="eq(-2,true)"/>
+        <setting id="vd_host" label="Host IP" subsetting="true" type="ipaddress" visible="eq(-3,true)"/>
+        <setting id="vd_port" label="Port" subsetting="true" type="number" visible="eq(-4,true)"/>
+        <setting default="osmc" id="vd_user" label="Username" subsetting="true" type="text" visible="eq(-5,true)"/>
+        <setting default="osmc" id="vd_pass" label="Password" subsetting="true" type="text" visible="eq(-6,true)"/>
         <setting type="sep"/>
         <setting default="false" id="mu_toggle" label="Include Music" type="bool"/>
-            <setting subsetting="true" default="MyMusic" id="mu_name" label="Name (optional)" type="text" visible="eq(-1,true)"/>
-            <setting subsetting="true" default="mysql" id="mu_type" label="Type" type="text" visible="eq(-2,true)"/>
-            <setting subsetting="true" id="mu_host" label="Host IP" type="ipaddress" visible="eq(-3,true)"/>
-            <setting subsetting="true" id="mu_port" label="Port" type="number" visible="eq(-4,true)"/>
-            <setting subsetting="true" default="osmc" id="mu_user" label="Username" type="text" visible="eq(-5,true)"/>
-            <setting subsetting="true" default="osmc" id="mu_pass" label="Password" type="text" visible="eq(-6,true)"/>
+        <setting default="MyMusic" id="mu_name" label="Name (optional)" subsetting="true" type="text" visible="eq(-1,true)"/>
+        <setting default="mysql" id="mu_type" label="Type" subsetting="true" type="text" visible="eq(-2,true)"/>
+        <setting id="mu_host" label="Host IP" subsetting="true" type="ipaddress" visible="eq(-3,true)"/>
+        <setting id="mu_port" label="Port" subsetting="true" type="number" visible="eq(-4,true)"/>
+        <setting default="osmc" id="mu_user" label="Username" subsetting="true" type="text" visible="eq(-5,true)"/>
+        <setting default="osmc" id="mu_pass" label="Password" subsetting="true" type="text" visible="eq(-6,true)"/>
     </category>
-        <category label="videolibrary">
+    <category label="videolibrary">
         <!--videolibrary_HEADING-->
         <!--importwatchedstate>false</importwatchedstate-->
         <setting default="false" id="importwatchedstatebool" label="Activate importwatchedstate" type="bool"/>
@@ -224,57 +224,12 @@
         <setting default="0" enable="eq(-1,true)" id="commbreakautowind" label="commbreakautowind" subsetting="true" type="number"/>
         <!--/edl_HEADING-->
     </category>
-
     <category label="videoscanner">
         <!--videoscanner_HEADING-->
         <!--ignoreerrors>true</ignoreerrors-->
         <setting default="false" id="ignoreerrorsbool" label="Activate ignoreerrors" type="bool"/>
         <setting default="true" enable="eq(-1,true)" id="ignoreerrors" label="ignoreerrors" lvalues="32001|32002" subsetting="true" type="labelenum"/>
         <!--/videoscanner_HEADING-->
-    </category>
-    <category label="singletons">
-        <!--imageres>720</imageres-->
-        <setting default="false" id="imageresbool" label="Activate imageres" type="bool"/>
-        <setting default="720" enable="eq(-1,true)" id="imageres" label="imageres" subsetting="true" type="number"/>
-        <!--fanartres>1080</fanartres-->
-        <setting default="false" id="fanartresbool" label="Activate fanartres" type="bool"/>
-        <setting default="1080" enable="eq(-1,true)" id="fanartres" label="fanartres" subsetting="true" type="number"/>
-        <!--useddsfanart>true</useddsfanart-->
-        <setting default="false" id="useddsfanartbool" label="Activate useddsfanart" type="bool"/>
-        <setting default="true" enable="eq(-1,true)" id="useddsfanart" label="useddsfanart" lvalues="32001|32002" subsetting="true" type="labelenum"/>
-        <!--playlistretries>100</playlistretries-->
-        <setting default="false" id="playlistretriesbool" label="Activate playlistretries" type="bool"/>
-        <setting default="100" enable="eq(-1,true)" id="playlistretries" label="playlistretries" subsetting="true" type="number"/>
-        <!--playlisttimeout>20</playlisttimeout-->
-        <setting default="false" id="playlisttimeoutbool" label="Activate playlisttimeout" type="bool"/>
-        <setting default="20" enable="eq(-1,true)" id="playlisttimeout" label="playlisttimeout" subsetting="true" type="number"/>
-        <!--packagefoldersize>200</packagefoldersize-->
-        <setting default="false" id="packagefoldersizebool" label="Activate packagefoldersize" type="bool"/>
-        <setting default="200" enable="eq(-1,true)" id="packagefoldersize" label="packagefoldersize" subsetting="true" type="number"/>
-        <!--remotedelay>10</remotedelay-->
-        <setting default="false" id="remotedelaybool" label="Activate remotedelay" type="bool"/>
-        <setting default="10" enable="eq(-1,true)" id="remotedelay" label="remotedelay" subsetting="true" type="number"/>
-        <!--remoterepeat>800</remoterepeat-->
-        <setting default="false" id="remoterepeatbool" label="Activate remoterepeat" type="bool"/>
-        <setting default="800" enable="eq(-1,true)" id="remoterepeat" label="remoterepeat" subsetting="true" type="number"/>
-        <!--controllerdeadzone>0.2</controllerdeadzone-->
-        <setting default="false" id="controllerdeadzonebool" label="Activate controllerdeadzone" type="bool"/>
-        <setting default="0.2" enable="eq(-1,true)" id="controllerdeadzone" label="controllerdeadzone" subsetting="true" type="number"/>
-        <!--enablemultimediakeys>true</enablemultimediakeys-->
-        <setting default="false" id="enablemultimediakeysbool" label="Activate enablemultimediakeys" type="bool"/>
-        <setting default="true" enable="eq(-1,true)" id="enablemultimediakeys" label="enablemultimediakeys" lvalues="32001|32002" subsetting="true" type="labelenum"/>
-        <!--showexitbutton>false</showexitbutton-->
-        <setting default="false" id="showexitbuttonbool" label="Activate showexitbutton" type="bool"/>
-        <setting default="false" enable="eq(-1,true)" id="showexitbutton" label="showexitbutton" lvalues="32001|32002" subsetting="true" type="labelenum"/>
-        <!--fullscreen>false</fullscreen-->
-        <setting default="false" id="fullscreenbool" label="Activate fullscreen" type="bool"/>
-        <setting default="false" enable="eq(-1,true)" id="fullscreen" label="fullscreen" lvalues="32001|32002" subsetting="true" type="labelenum"/>
-        <!--splash>false</splash-->
-        <setting default="false" id="splashbool" label="Activate splash" type="bool"/>
-        <setting default="false" enable="eq(-1,true)" id="splash" label="splash" lvalues="32001|32002" subsetting="true" type="labelenum"/>
-        <!--alwaysontop>yes</alwaysontop-->
-        <setting default="false" id="alwaysontopbool" label="Activate alwaysontop" type="bool"/>
-        <setting default="yes" enable="eq(-1,true)" id="alwaysontop" label="alwaysontop" lvalues="yes|no" subsetting="true" type="labelenum"/>
     </category>
     <category label="karaoke">
         <!--karaoke_HEADING-->
@@ -364,6 +319,50 @@
         <setting default="false" id="maxretriesbool" label="Activate maxretries" type="bool"/>
         <setting default="3" enable="eq(-1,true)" id="maxretries" label="maxretries" subsetting="true" type="number"/>
         <!--/masterlock_HEADING-->
+    </category>
+    <category label="Other Settings">
+        <!--imageres>720</imageres-->
+        <setting default="false" id="imageresbool" label="Activate imageres" type="bool"/>
+        <setting default="720" enable="eq(-1,true)" id="imageres" label="imageres" subsetting="true" type="number"/>
+        <!--fanartres>1080</fanartres-->
+        <setting default="false" id="fanartresbool" label="Activate fanartres" type="bool"/>
+        <setting default="1080" enable="eq(-1,true)" id="fanartres" label="fanartres" subsetting="true" type="number"/>
+        <!--useddsfanart>true</useddsfanart-->
+        <setting default="false" id="useddsfanartbool" label="Activate useddsfanart" type="bool"/>
+        <setting default="true" enable="eq(-1,true)" id="useddsfanart" label="useddsfanart" lvalues="32001|32002" subsetting="true" type="labelenum"/>
+        <!--playlistretries>100</playlistretries-->
+        <setting default="false" id="playlistretriesbool" label="Activate playlistretries" type="bool"/>
+        <setting default="100" enable="eq(-1,true)" id="playlistretries" label="playlistretries" subsetting="true" type="number"/>
+        <!--playlisttimeout>20</playlisttimeout-->
+        <setting default="false" id="playlisttimeoutbool" label="Activate playlisttimeout" type="bool"/>
+        <setting default="20" enable="eq(-1,true)" id="playlisttimeout" label="playlisttimeout" subsetting="true" type="number"/>
+        <!--packagefoldersize>200</packagefoldersize-->
+        <setting default="false" id="packagefoldersizebool" label="Activate packagefoldersize" type="bool"/>
+        <setting default="200" enable="eq(-1,true)" id="packagefoldersize" label="packagefoldersize" subsetting="true" type="number"/>
+        <!--remotedelay>10</remotedelay-->
+        <setting default="false" id="remotedelaybool" label="Activate remotedelay" type="bool"/>
+        <setting default="10" enable="eq(-1,true)" id="remotedelay" label="remotedelay" subsetting="true" type="number"/>
+        <!--remoterepeat>800</remoterepeat-->
+        <setting default="false" id="remoterepeatbool" label="Activate remoterepeat" type="bool"/>
+        <setting default="800" enable="eq(-1,true)" id="remoterepeat" label="remoterepeat" subsetting="true" type="number"/>
+        <!--controllerdeadzone>0.2</controllerdeadzone-->
+        <setting default="false" id="controllerdeadzonebool" label="Activate controllerdeadzone" type="bool"/>
+        <setting default="0.2" enable="eq(-1,true)" id="controllerdeadzone" label="controllerdeadzone" subsetting="true" type="number"/>
+        <!--enablemultimediakeys>true</enablemultimediakeys-->
+        <setting default="false" id="enablemultimediakeysbool" label="Activate enablemultimediakeys" type="bool"/>
+        <setting default="true" enable="eq(-1,true)" id="enablemultimediakeys" label="enablemultimediakeys" lvalues="32001|32002" subsetting="true" type="labelenum"/>
+        <!--showexitbutton>false</showexitbutton-->
+        <setting default="false" id="showexitbuttonbool" label="Activate showexitbutton" type="bool"/>
+        <setting default="false" enable="eq(-1,true)" id="showexitbutton" label="showexitbutton" lvalues="32001|32002" subsetting="true" type="labelenum"/>
+        <!--fullscreen>false</fullscreen-->
+        <setting default="false" id="fullscreenbool" label="Activate fullscreen" type="bool"/>
+        <setting default="false" enable="eq(-1,true)" id="fullscreen" label="fullscreen" lvalues="32001|32002" subsetting="true" type="labelenum"/>
+        <!--splash>false</splash-->
+        <setting default="false" id="splashbool" label="Activate splash" type="bool"/>
+        <setting default="false" enable="eq(-1,true)" id="splash" label="splash" lvalues="32001|32002" subsetting="true" type="labelenum"/>
+        <!--alwaysontop>yes</alwaysontop-->
+        <setting default="false" id="alwaysontopbool" label="Activate alwaysontop" type="bool"/>
+        <setting default="yes" enable="eq(-1,true)" id="alwaysontop" label="alwaysontop" lvalues="yes|no" subsetting="true" type="labelenum"/>
     </category>
     <!--/advancedsettings_HEADING-->
 </settings>

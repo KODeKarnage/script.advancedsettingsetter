@@ -74,8 +74,7 @@ On Open of addon:
 		if value is None, then set related bool setting to false [setSetting(key+'bool',true)]
 		else set the bool to True and enter the value [setSetting(key, value)]
 
-	open addon settings, wait for them to be closed (just enter a loop that checks the xml window that is open, 50ms, 
-		continue when it isnt addonsettings.xml or whatever)
+	open addon settings, wait for them to be closed
 
 On Close of addon settings 
 
@@ -141,9 +140,6 @@ class Main(object):
 
 		__addon__.openSettings()
 
-		# wait for the settings window to be closed
-		self.settings_open_loop()
-
 		# clean the ADVS of deactivated settings (change the values to None), load the new settings into it
 		self.ADVS = self.check_bools(self.ADVS)
 
@@ -156,39 +152,37 @@ class Main(object):
 		# remove the items from ADVS where the value is None
 		self.ADVS = self.remove_Nones(self.ADVS)
 
+		self.print_dict(self.ADVS)
+
 		# ADVS now represents the values the user set in the Settings screen and the items in the original advancedsettings.xml
 		# that are NOT found in the addons settings
 
-		# write the ADVS into the existing advancedsettings.xml
-		xmltodict.unparse(input_dict=self.ADVS, output=self.existing_AS_file, pretty=True)
-
-		# edit the advancedsettings.xml to have this as the first line
-		first_line = ['<?xml version="1.0" encoding="utf-8" standalone="yes"?>']
-
-		with open(self.existing_AS_file, 'r') as f:
-			lines = f.readlines()
-
-		with open(self.existing_AS_file, 'w') as f:
-			f.writelines(first_line + lines)
+		if self.ADVS:
+			# write the ADVS into the existing advancedsettings.xml
+			with open(self.existing_AS_file, 'w') as f:
+				xmltodict.unparse(input_dict=dict(self.ADVS), output=f, pretty=True)
 
 
-	def settings_open_loop(self):
-		''' The settings window has been opened, and we will loop here until it is closed again. '''
+	def print_dict(self, dictionary):
+		''' log the contents of the ADVS dictionary '''
 
-		# give the window 5 seconds to open
-		xbmc.sleep(5000)
-
-		while xbmc.getInfoLabel('Window.Property(xmlfile)') == 'DialogAddonSettings.xml':
-
-			xbmc.sleep(50)
+		for k, v in dictionary.iteritems():
+			if isinstance(v, dict):
+				log('-->  %s' % k)
+				self.print_dict(v)
+			else:
+				log('%s   %s' % (k, v))
 
 
 	def remove_Nones(self, dictionary):
 		''' Removes item pairs from the dictionary where the value is None. '''
 
-		for k, v in dictionary.iteritems():
+		safe_dict = dictionary.copy()
+		for k, v in safe_dict.iteritems():
 			if isinstance(v, dict):
-				dictionary[k] = self.remove_Nones(dictionary)
+				dictionary[k] = self.remove_Nones(dictionary[k])
+				if not dictionary[k]:
+					del dictionary[k]
 			else:
 				if v is None:
 					del dictionary[k]
@@ -201,11 +195,12 @@ class Main(object):
 			if it is active, then extract the new value from the local settings.
 		'''
 
-		for k, v in dictionary.iteritems():
+		safe_dict = dictionary.copy()
+		for k, v in safe_dict.iteritems():
 			if isinstance(v, dict):
-				dictionary[k] = self.check_bools(dictionary)
+				dictionary[k] = self.check_bools(dictionary[k])
 			else:
-				if __setting__.(k + 'bool') == 'false':
+				if __setting__(k + 'bool') == 'false':
 					dictionary[k] = None
 				else:
 					dictionary[k] = __setting__(k)
@@ -216,14 +211,14 @@ class Main(object):
 	def update_addon_settings(self, dictonary):
 		''' Extracts the settings from the dicitonary provided and loads them into the local addon settings.'''
 
-		for k, v in dictonary.iteritems:
+		for k, v in dictonary.iteritems():
 			if isinstance(v, dict):
 				self.update_addon_settings(v)
 			else:
 				if v is None:
-					__addon__.setSetting(k+'bool', 'false')
+					__addon__.setSetting(k + 'bool', 'false')
 				else:
-					__addon__.setSetting(k+'bool', 'true')
+					__addon__.setSetting(k + 'bool', 'true')
 					__addon__.setSetting(k, v)
 
 
@@ -232,10 +227,33 @@ class Main(object):
 
 		loc = self.existing_AS_file
 
-		with open(loc, 'r') as f:
-			doc = ''.join(f.readlines())
+		null_doc = {'advancedsettings': {}}
 
-		return xmltodict.parse(doc)
+		log('advancedsettings file exists = %s' % os.path.isfile(loc))
+
+		if os.path.isfile(loc):
+
+			with open(loc, 'r') as f:
+				lines = f.readlines()
+			
+			if not lines:
+				log('advancedsettings.xml file is empty')
+				return null_doc
+
+			# check for first line
+
+			# if '<?' in lines[0]:
+			# 	lines = [x.strip() for x in lines[1:]]
+
+			# doc = ''.join(lines)
+
+			with open(loc, 'r') as f:
+				doc = xmltodict.parse(f)
+
+			return doc
+
+		else:
+			return null_doc
 
 
 	def create_ADVS_dict(self):
@@ -243,13 +261,15 @@ class Main(object):
 
 		new_lines = []
 
+		log('template source file exists: %s' % os.path.isfile(self.template_source_file))
+
 		with open(self.template_source_file, 'r') as f:
 			lines = f.readlines()
 
 			for line in lines:
 
 				if '<!--' in line:
-					new_lines.append(line.replace("_HEADING",'').replace('<!--','').replace('-->','').strip())
+					new_lines.append(line.replace("_HEADING",'').replace('<!--','<').replace('-->','>').strip())
 
 		doc = ''.join(new_lines)	
 
@@ -259,9 +279,10 @@ class Main(object):
 	def set_all_values_to_None(self, dictionary):
 		''' Takes a dictionary and sets all the values to None. Looks through nested dictionaries and only changes end values.'''
 
-		for k, v in dictionary.iteritems():
+		safe_dict = dictionary.copy()
+		for k, v in safe_dict.iteritems():
 			if isinstance(v, dict):
-				dictionary[k] = self.set_all_values_to_None(dictionary)
+				dictionary[k] = self.set_all_values_to_None(dictionary[k])
 			else:
 				dictionary[k] = None
 
@@ -272,7 +293,8 @@ class Main(object):
 		''' Takes two dictionaries and updates the first with values from the second but retains the data in the destination,
 			if it is not in the source. Dicts that are values themselves are given a similar treatment, rather than being overwritten'''
 
-		for k, v in dest_dict.iteritems():
+		safe_dict = dest_dict.copy()
+		for k, v in safe_dict.iteritems():
 
 				if k in source_dict:
 					if isinstance(v, dict):
@@ -344,10 +366,12 @@ class Main(object):
 			video[sql_item] = __setting__('vd_' + sql_item) if __setting__('vd_toggle') == 'true' else None
 			music[sql_item] = __setting__('mu_' + sql_item) if __setting__('mu_toggle') == 'true' else None
 
-		dictionary['videodatabase'] = video
-		dictionary['musicdatabase'] = music
+		sub_dict = dictionary.get('advancedsettings',{})
 
-		return dictionary
+		sub_dict['videodatabase'] = video
+		sub_dict['musicdatabase'] = music
+
+		return {'advancedsettings': sub_dict}
 
 
 
