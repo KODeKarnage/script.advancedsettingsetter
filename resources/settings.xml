@@ -320,7 +320,46 @@
         <setting default="3" enable="eq(-1,true)" id="maxretries" label="maxretries" subsetting="true" type="number"/>
         <!--/masterlock_HEADING-->
     </category>
+    <category label="JSON-RPC (For Devs)">
+        <!--jsonrpc_HEADING-->
+        <!-- <compactoutput>false</compactoutput>-->
+        <setting default="false" id="compactoutputbool" label="Activate compactoutput" type="bool"/>
+        <setting default="true" enable="eq(-1,true)" id="compactoutput" label="compactoutput" lvalues="32001|32002" subsetting="true" type="labelenum"/>
+        <!-- <tcpport>9999</tcpport>-->
+        <setting default="false" id="tcpportbool" label="Activate compactoutput" type="bool"/>
+        <setting id="tcpport" label="tcpport" subsetting="true" type="number" visible="eq(-1,true)"/>
+        <!--/jsonrpc_HEADING-->
+    </category>
+    <category label="Myth">
+        <!--myth_HEADING-->
+        <!-- <movielength>0</movielength>-->
+        <setting default="false" id="movielengthbool" label="Activate movielength" type="bool"/>
+        <setting id="movielength" label="movielength" subsetting="true" type="number" visible="eq(-1,true)"/>
+        <!--/myth_HEADING-->
+    </category>
+    <category label="Input Settings">
+        <!--remotedelay>10</remotedelay-->
+        <setting default="false" id="remotedelaybool" label="Activate remotedelay" type="bool"/>
+        <setting default="10" enable="eq(-1,true)" id="remotedelay" label="remotedelay" subsetting="true" type="number"/>
+        <!--remoterepeat>800</remoterepeat-->
+        <setting default="false" id="remoterepeatbool" label="Activate remoterepeat" type="bool"/>
+        <setting default="800" enable="eq(-1,true)" id="remoterepeat" label="remoterepeat" subsetting="true" type="number"/>
+        <!--controllerdeadzone>0.2</controllerdeadzone-->
+        <setting default="false" id="controllerdeadzonebool" label="Activate controllerdeadzone" type="bool"/>
+        <setting default="0.2" enable="eq(-1,true)" id="controllerdeadzone" label="controllerdeadzone" subsetting="true" type="number"/>
+        <!--enablemultimediakeys>true</enablemultimediakeys-->
+        <setting default="false" id="enablemultimediakeysbool" label="Activate enablemultimediakeys" type="bool"/>
+        <setting default="true" enable="eq(-1,true)" id="enablemultimediakeys" label="enablemultimediakeys" lvalues="32001|32002" subsetting="true" type="labelenum"/>
+    </category>
+    <category label="Seek Steps">
+        <!-- <seeksteps>7, 15, 30, 60, 180, 300, 600, 900, 1800</seeksteps>-->
+        <setting default="false" id="seekstepsbool" label="Activate seeksteps" type="bool"/>
+        <setting default="7, 15, 30, 60, 180, 300, 600, 900, 1800" id="seeksteps" label="seeksteps" subsetting="true" type="text" visible="eq(-1,true)"/>
+    </category>
     <category label="Other Settings">
+        <!-- <skiploopfilter>8</skiploopfilter>-->
+        <setting default="false" id="skiploopfilterbool" label="Activate skiploopfilter" type="bool"/>
+        <setting default="true" enable="eq(-1,true)" id="skiploopfilter" label="skiploopfilter" lvalues="-16|0|8|16|32|48" subsetting="true" type="labelenum"/>
         <!--imageres>720</imageres-->
         <setting default="false" id="imageresbool" label="Activate imageres" type="bool"/>
         <setting default="720" enable="eq(-1,true)" id="imageres" label="imageres" subsetting="true" type="number"/>
@@ -339,18 +378,6 @@
         <!--packagefoldersize>200</packagefoldersize-->
         <setting default="false" id="packagefoldersizebool" label="Activate packagefoldersize" type="bool"/>
         <setting default="200" enable="eq(-1,true)" id="packagefoldersize" label="packagefoldersize" subsetting="true" type="number"/>
-        <!--remotedelay>10</remotedelay-->
-        <setting default="false" id="remotedelaybool" label="Activate remotedelay" type="bool"/>
-        <setting default="10" enable="eq(-1,true)" id="remotedelay" label="remotedelay" subsetting="true" type="number"/>
-        <!--remoterepeat>800</remoterepeat-->
-        <setting default="false" id="remoterepeatbool" label="Activate remoterepeat" type="bool"/>
-        <setting default="800" enable="eq(-1,true)" id="remoterepeat" label="remoterepeat" subsetting="true" type="number"/>
-        <!--controllerdeadzone>0.2</controllerdeadzone-->
-        <setting default="false" id="controllerdeadzonebool" label="Activate controllerdeadzone" type="bool"/>
-        <setting default="0.2" enable="eq(-1,true)" id="controllerdeadzone" label="controllerdeadzone" subsetting="true" type="number"/>
-        <!--enablemultimediakeys>true</enablemultimediakeys-->
-        <setting default="false" id="enablemultimediakeysbool" label="Activate enablemultimediakeys" type="bool"/>
-        <setting default="true" enable="eq(-1,true)" id="enablemultimediakeys" label="enablemultimediakeys" lvalues="32001|32002" subsetting="true" type="labelenum"/>
         <!--showexitbutton>false</showexitbutton-->
         <setting default="false" id="showexitbuttonbool" label="Activate showexitbutton" type="bool"/>
         <setting default="false" enable="eq(-1,true)" id="showexitbutton" label="showexitbutton" lvalues="32001|32002" subsetting="true" type="labelenum"/>
