@@ -322,17 +322,17 @@
     </category>
     <category label="JSON-RPC (For Devs)">
         <!--jsonrpc_HEADING-->
-        <!-- <compactoutput>false</compactoutput>-->
+        <!--compactoutput>false</compactoutput-->
         <setting default="false" id="compactoutputbool" label="Activate compactoutput" type="bool"/>
         <setting default="true" enable="eq(-1,true)" id="compactoutput" label="compactoutput" lvalues="32001|32002" subsetting="true" type="labelenum"/>
-        <!-- <tcpport>9999</tcpport>-->
+        <!--tcpport>9999</tcpport-->
         <setting default="false" id="tcpportbool" label="Activate compactoutput" type="bool"/>
         <setting id="tcpport" label="tcpport" subsetting="true" type="number" visible="eq(-1,true)"/>
         <!--/jsonrpc_HEADING-->
     </category>
     <category label="Myth">
         <!--myth_HEADING-->
-        <!-- <movielength>0</movielength>-->
+        <!--movielength>0</movielength-->
         <setting default="false" id="movielengthbool" label="Activate movielength" type="bool"/>
         <setting id="movielength" label="movielength" subsetting="true" type="number" visible="eq(-1,true)"/>
         <!--/myth_HEADING-->
@@ -352,12 +352,12 @@
         <setting default="true" enable="eq(-1,true)" id="enablemultimediakeys" label="enablemultimediakeys" lvalues="32001|32002" subsetting="true" type="labelenum"/>
     </category>
     <category label="Seek Steps">
-        <!-- <seeksteps>7, 15, 30, 60, 180, 300, 600, 900, 1800</seeksteps>-->
+        <!--seeksteps>7, 15, 30, 60, 180, 300, 600, 900, 1800</seeksteps-->
         <setting default="false" id="seekstepsbool" label="Activate seeksteps" type="bool"/>
         <setting default="7, 15, 30, 60, 180, 300, 600, 900, 1800" id="seeksteps" label="seeksteps" subsetting="true" type="text" visible="eq(-1,true)"/>
     </category>
     <category label="Other Settings">
-        <!-- <skiploopfilter>8</skiploopfilter>-->
+        <!--skiploopfilter>8</skiploopfilter-->
         <setting default="false" id="skiploopfilterbool" label="Activate skiploopfilter" type="bool"/>
         <setting default="true" enable="eq(-1,true)" id="skiploopfilter" label="skiploopfilter" lvalues="-16|0|8|16|32|48" subsetting="true" type="labelenum"/>
         <!--imageres>720</imageres-->
